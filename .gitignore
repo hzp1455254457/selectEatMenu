@@ -1,0 +1,27 @@
+node_modules
+dist
+dist-electron
+release
+.DS_Store
+*.log
+
+# Editor / assistant generated folders
+.agent
+.amazonq
+.augment
+.clinerules
+.codebuddy
+.cospec
+.crush
+.cursor
+.factory
+.gemini
+.github
+.iflow
+.kilocode
+.opencode
+.qoder
+.qwen
+.roo
+.windsurf
+
