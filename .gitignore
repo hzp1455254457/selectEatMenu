@@ -16,7 +16,8 @@ release
 .cursor
 .factory
 .gemini
-.github
+# .github (removed to allow workflows)
+release_*
 .iflow
 .kilocode
 .opencode
