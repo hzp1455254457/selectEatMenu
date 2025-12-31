@@ -11,6 +11,7 @@ export default defineConfig({
   themeConfig: {
     nav: [
       { text: '首页', link: '/' },
+      { text: '快速搭建', link: '/framework-setup' },
       { text: 'PRD', link: '/PRD' },
       { text: 'UI 线框图', link: '/UI-Wireframe' }
     ],
@@ -19,6 +20,7 @@ export default defineConfig({
         text: '文档',
         items: [
           { text: '概览', link: '/' },
+          { text: '快速搭建', link: '/framework-setup' },
           { text: 'PRD', link: '/PRD' },
           { text: 'UI 线框图', link: '/UI-Wireframe' }
         ]
@@ -28,4 +30,3 @@ export default defineConfig({
     search: { provider: 'local' }
   }
 })
-
