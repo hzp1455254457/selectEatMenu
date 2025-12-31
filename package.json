@@ -8,7 +8,8 @@
     "dev": "vite",
     "build": "vite build",
     "typecheck": "vue-tsc --noEmit",
-    "package": "npm run build && electron-builder --dir"
+    "package": "npm run build && electron-builder --dir",
+    "build:win": "npm run build && electron-builder --win"
   },
   "dependencies": {
     "canvas-confetti": "^1.9.4",
@@ -35,8 +36,23 @@
       "dist-electron/**",
       "package.json"
     ],
+    "electronDist": "node_modules/electron/dist",
     "directories": {
       "output": "release"
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "resources/icon.ico",
+      "requestedExecutionLevel": "asInvoker"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "SelectEatMenu",
+      "include": "build/installer.nsh",
+      "license": "build/license.txt"
     }
   }
 }

@@ -1,5 +1,6 @@
 import { app, BrowserWindow, Menu, ipcMain } from 'electron'
 import { fileURLToPath } from 'node:url'
+import path from 'node:path'
 import Store from 'electron-store'
 
 const store = new Store()
@@ -32,11 +33,14 @@ const createWindow = async () => {
     webPreferences: {
       contextIsolation: true,
       nodeIntegration: false,
-      preload: fileURLToPath(new URL('./index.mjs', import.meta.url))
+      preload: fileURLToPath(new URL('./index.cjs', import.meta.url))
     }
   })
 
   win.setMenuBarVisibility(false)
+
+  // Open DevTools in production for debugging (Temporary)
+  // win.webContents.openDevTools()
 
   const devServerUrl = process.env.VITE_DEV_SERVER_URL
   if (devServerUrl) {
@@ -44,7 +48,9 @@ const createWindow = async () => {
     return
   }
 
-  await win.loadFile(fileURLToPath(new URL('../dist/index.html', import.meta.url)))
+  // Use absolute path for production to avoid relative path issues
+  // app.getAppPath() returns the path to the app.asar file in production
+  await win.loadFile(path.join(app.getAppPath(), 'dist/index.html'))
 }
 
 app.whenReady().then(() => {

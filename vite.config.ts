@@ -12,7 +12,17 @@ export default defineConfig({
         entry: 'electron-main/index.ts'
       },
       preload: {
-        input: resolve(__dirname, 'electron-preload/index.ts')
+        input: resolve(__dirname, 'electron-preload/index.ts'),
+        vite: {
+          build: {
+            rollupOptions: {
+              output: {
+                format: 'cjs',
+                entryFileNames: '[name].cjs',
+              },
+            },
+          },
+        },
       }
     })
   ],
