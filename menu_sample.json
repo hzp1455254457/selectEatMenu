@@ -1,0 +1,10 @@
+[
+  { "name": "麻辣烫", "tags": ["spicy", "hot"] },
+  { "name": "兰州拉面", "tags": ["noodle"] },
+  { "name": "黄焖鸡米饭", "tags": ["rice"] },
+  { "name": "沙县小吃", "tags": ["cheap"] },
+  { "name": "麦当劳", "tags": ["fastfood"] },
+  { "name": "肯德基", "tags": ["fastfood"] },
+  { "name": "必胜客", "tags": ["pizza"] },
+  { "name": "饺子", "tags": ["traditional"] }
+]
