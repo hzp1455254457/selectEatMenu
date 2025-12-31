@@ -1,7 +1,9 @@
 node_modules
 dist
 dist-electron
-release
+release*/
+docs/.vitepress/cache
+docs/.vitepress/dist
 .DS_Store
 *.log
 
@@ -16,8 +18,6 @@ release
 .cursor
 .factory
 .gemini
-# .github (removed to allow workflows)
-release_*
 .iflow
 .kilocode
 .opencode
@@ -25,4 +25,3 @@ release_*
 .qwen
 .roo
 .windsurf
-

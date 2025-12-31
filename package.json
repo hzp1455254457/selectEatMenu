@@ -10,7 +10,10 @@
     "typecheck": "vue-tsc --noEmit",
     "package": "npm run build && electron-builder --dir",
     "build:win": "npm run build && electron-builder --win",
-    "build:mac": "npm run build && electron-builder --mac"
+    "build:mac": "npm run build && electron-builder --mac",
+    "docs:dev": "vitepress dev docs --port 5174",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs --port 5174"
   },
   "dependencies": {
     "canvas-confetti": "^1.9.4",
@@ -26,6 +29,7 @@
     "electron-builder": "^25.1.8",
     "typescript": "^5.7.2",
     "vite": "^6.0.6",
+    "vitepress": "^1.0.0",
     "vite-plugin-electron": "^0.29.0",
     "vue-tsc": "^2.1.10"
   },
