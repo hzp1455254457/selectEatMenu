@@ -11,11 +11,13 @@
     "package": "npm run build && electron-builder --dir"
   },
   "dependencies": {
+    "canvas-confetti": "^1.9.4",
     "electron-store": "^11.0.2",
     "pinia": "^3.0.4",
     "vue": "^3.5.13"
   },
   "devDependencies": {
+    "@types/canvas-confetti": "^1.9.0",
     "@types/node": "^22.10.2",
     "@vitejs/plugin-vue": "^5.2.1",
     "electron": "^34.5.8",

@@ -18,7 +18,8 @@ export const useMenuStore = defineStore('menu', {
       }
     },
     async saveItems() {
-      await window.openspecBridge.store.set('menuItems', this.items)
+      // Ensure we are saving a plain object, not a Proxy
+      await window.openspecBridge.store.set('menuItems', JSON.parse(JSON.stringify(this.items)))
     },
     async importItems(newItems: MenuItem[]) {
       this.items = newItems

@@ -6,10 +6,13 @@ const store = new Store()
 
 // Store IPC handlers
 ipcMain.handle('store-get', (_event, key) => {
-  return store.get(key)
+  const value = store.get(key)
+  console.log(`[IPC] store-get ${key}:`, value)
+  return value
 })
 
 ipcMain.handle('store-set', (_event, key, value) => {
+  console.log(`[IPC] store-set ${key}:`, value)
   store.set(key, value)
 })
 

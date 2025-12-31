@@ -78,101 +78,172 @@ const addItem = async () => {
       <p>暂无菜单，请添加或导入。</p>
     </div>
     <ul v-else class="items-container">
-      <li v-for="item in menuStore.items" :key="item.id" class="menu-item">
-        <div class="item-info">
-          <span class="item-name">{{ item.name }}</span>
-          <span v-if="item.tags" class="item-tags">
-            <span v-for="tag in item.tags" :key="tag" class="tag">{{ tag }}</span>
-          </span>
-        </div>
-        <button @click="menuStore.removeItem(item.id)" class="del-btn">×</button>
-      </li>
+      <TransitionGroup name="list">
+        <li v-for="item in menuStore.items" :key="item.id" class="menu-item">
+          <div class="item-info">
+            <span class="item-name">{{ item.name }}</span>
+            <span v-if="item.tags" class="item-tags">
+              <span v-for="tag in item.tags" :key="tag" class="tag">{{ tag }}</span>
+            </span>
+          </div>
+          <button @click="menuStore.removeItem(item.id)" class="del-btn">×</button>
+        </li>
+      </TransitionGroup>
     </ul>
   </div>
 </template>
 
 <style scoped>
 .menu-list {
-  padding: 1rem;
-  border: 1px solid #ccc;
-  border-radius: 8px;
+  padding: 1.5rem;
+  border-radius: 16px;
   background: white;
   display: flex;
   flex-direction: column;
+  height: 100%;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  border: 1px solid #f1f5f9;
 }
+
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 10px;
+  margin-bottom: 20px;
 }
+
+.header h2 {
+  margin: 0;
+  color: #1e293b;
+  font-weight: 700;
+}
+
 .add-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 6px rgba(118, 75, 162, 0.3);
+}
+
+.add-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 8px rgba(118, 75, 162, 0.4);
+}
+
+.add-form {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  background: #f8fafc;
+  padding: 15px;
+  border-radius: 12px;
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.input-name, .input-tags {
+  padding: 8px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.input-name:focus, .input-tags:focus {
+  border-color: #667eea;
+}
+
+.save-btn {
   background: #42b883;
   color: white;
   border: none;
-  border-radius: 4px;
-  padding: 4px 8px;
+  padding: 8px 16px;
+  border-radius: 8px;
   cursor: pointer;
 }
-.add-form {
-  display: flex;
-  gap: 5px;
-  margin-bottom: 10px;
-  padding: 10px;
-  background: #f9f9f9;
-  border-radius: 4px;
-}
-.input-name { flex: 2; }
-.input-tags { flex: 1; }
-.save-btn {
-  background: #35495e;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-.save-btn:disabled { background: #ccc; }
 
 .actions {
-  margin-bottom: 10px;
+  margin-bottom: 15px;
   font-size: 0.9rem;
+  color: #64748b;
 }
-.import-label { margin-right: 5px; color: #666; }
 
 .items-container {
-  max-height: 400px;
-  overflow-y: auto;
+  list-style: none;
   padding: 0;
   margin: 0;
-  list-style: none;
+  flex: 1;
+  overflow-y: auto;
 }
+
 .menu-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 8px 5px;
-  border-bottom: 1px solid #eee;
+  padding: 12px 16px;
+  margin-bottom: 8px;
+  background: #f8fafc;
+  border-radius: 10px;
+  transition: all 0.2s;
+  border: 1px solid transparent;
 }
-.item-info {
-  display: flex;
-  flex-direction: column;
+
+.menu-item:hover {
+  background: white;
+  border-color: #e2e8f0;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+  transform: translateX(4px);
 }
-.item-name { font-weight: bold; }
-.item-tags { display: flex; gap: 4px; margin-top: 2px; }
+
+.item-name {
+  font-weight: 600;
+  color: #334155;
+}
+
+.item-tags {
+  margin-left: 10px;
+}
+
 .tag {
-  font-size: 0.75rem;
-  background: #eee;
-  padding: 1px 4px;
-  border-radius: 3px;
-  color: #666;
+  font-size: 0.8rem;
+  background: #e2e8f0;
+  color: #64748b;
+  padding: 2px 8px;
+  border-radius: 6px;
+  margin-right: 4px;
 }
+
 .del-btn {
   background: transparent;
+  color: #cbd5e1;
   border: none;
-  color: #999;
   font-size: 1.2rem;
   cursor: pointer;
-  padding: 0 5px;
+  transition: color 0.2s;
+  padding: 0 8px;
 }
-.del-btn:hover { color: #ff4757; }
+
+.del-btn:hover {
+  color: #ef4444;
+}
+
+/* Transition Animations */
+.list-enter-active,
+.list-leave-active {
+  transition: all 0.4s cubic-bezier(0.25, 0.8, 0.5, 1);
+}
+
+.list-enter-from,
+.list-leave-to {
+  opacity: 0;
+  transform: translateX(30px);
+}
 </style>

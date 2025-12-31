@@ -21,11 +21,11 @@ export const useHistoryStore = defineStore('history', {
     async addEntry(entry: HistoryEntry) {
       // Add to beginning
       this.entries.unshift(entry)
-      await window.openspecBridge.store.set('historyEntries', this.entries)
+      await window.openspecBridge.store.set('historyEntries', JSON.parse(JSON.stringify(this.entries)))
     },
     async clearHistory() {
       this.entries = []
-      await window.openspecBridge.store.set('historyEntries', this.entries)
+      await window.openspecBridge.store.set('historyEntries', [])
     }
   }
 })
