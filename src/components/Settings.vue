@@ -1,7 +1,14 @@
 <script setup lang="ts">
 import { useSettingStore } from '../stores/settingStore'
+import { useHistoryStore } from '../stores/historyStore'
 
 const settingStore = useSettingStore()
+const historyStore = useHistoryStore()
+
+const onRetentionChange = async () => {
+  await settingStore.setHistoryRetentionDays(settingStore.historyRetentionDays)
+  await historyStore.applyRetentionPolicy()
+}
 </script>
 
 <template>
@@ -10,6 +17,10 @@ const settingStore = useSettingStore()
     <label class="setting-item">
       <span>冷却天数 (N天内不重复):</span>
       <input type="number" v-model.number="settingStore.cooldownDays" @change="settingStore.setCooldownDays(settingStore.cooldownDays)" min="0" />
+    </label>
+    <label class="setting-item">
+      <span>历史保留天数 (0为永久保留):</span>
+      <input type="number" v-model.number="settingStore.historyRetentionDays" @change="onRetentionChange" min="0" />
     </label>
   </div>
 </template>
@@ -37,6 +48,7 @@ const settingStore = useSettingStore()
   gap: 15px;
   font-size: 1rem;
   color: #4a5568;
+  margin-bottom: 12px;
 }
 
 .setting-item input {

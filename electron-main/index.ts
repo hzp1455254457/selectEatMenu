@@ -5,25 +5,67 @@ import Store from 'electron-store'
 
 const store = new Store()
 
-// Store IPC handlers
-ipcMain.handle('store-get', (_event, key) => {
-  const value = store.get(key)
-  console.log(`[IPC] store-get ${key}:`, value)
-  return value
+const allowedStoreKeys = new Set(['menuItems', 'historyEntries', 'settings'] as const)
+
+const isAllowedStoreKey = (key: unknown): key is 'menuItems' | 'historyEntries' | 'settings' => {
+  return typeof key === 'string' && allowedStoreKeys.has(key as any)
+}
+
+const isTrustedSender = (senderUrl: string) => {
+  try {
+    const url = new URL(senderUrl)
+    const devServerUrl = process.env.VITE_DEV_SERVER_URL
+    if (devServerUrl) {
+      const devOrigin = new URL(devServerUrl).origin
+      return url.origin === devOrigin
+    }
+
+    if (url.protocol !== 'file:') return false
+    return url.pathname.toLowerCase().includes('/dist/')
+  } catch {
+    return false
+  }
+}
+
+// Store IPC handlers (restricted)
+ipcMain.handle('store-get', (event, key) => {
+  if (!isTrustedSender(event.senderFrame?.url ?? event.sender.getURL())) throw new Error('Untrusted sender')
+  if (!isAllowedStoreKey(key)) throw new Error('Invalid key')
+  return store.get(key)
 })
 
-ipcMain.handle('store-set', (_event, key, value) => {
-  console.log(`[IPC] store-set ${key}:`, value)
+ipcMain.handle('store-set', (event, key, value) => {
+  if (!isTrustedSender(event.senderFrame?.url ?? event.sender.getURL())) throw new Error('Untrusted sender')
+  if (!isAllowedStoreKey(key)) throw new Error('Invalid key')
   store.set(key, value)
 })
 
-ipcMain.handle('store-delete', (_event, key) => {
+ipcMain.handle('store-delete', (event, key) => {
+  if (!isTrustedSender(event.senderFrame?.url ?? event.sender.getURL())) throw new Error('Untrusted sender')
+  if (!isAllowedStoreKey(key)) throw new Error('Invalid key')
   store.delete(key)
 })
 
-ipcMain.handle('store-clear', () => {
+ipcMain.handle('store-clear', (event) => {
+  if (!isTrustedSender(event.senderFrame?.url ?? event.sender.getURL())) throw new Error('Untrusted sender')
   store.clear()
 })
+
+const isAllowedNavigation = (navigationUrl: string) => {
+  try {
+    const url = new URL(navigationUrl)
+    const devServerUrl = process.env.VITE_DEV_SERVER_URL
+    if (devServerUrl) {
+      const devOrigin = new URL(devServerUrl).origin
+      return url.origin === devOrigin
+    }
+
+    if (url.protocol !== 'file:') return false
+    return url.pathname.toLowerCase().includes('/dist/')
+  } catch {
+    return false
+  }
+}
 
 const createWindow = async () => {
   const win = new BrowserWindow({
@@ -38,6 +80,11 @@ const createWindow = async () => {
   })
 
   win.setMenuBarVisibility(false)
+
+  win.webContents.setWindowOpenHandler(() => ({ action: 'deny' }))
+  win.webContents.on('will-navigate', (event, url) => {
+    if (!isAllowedNavigation(url)) event.preventDefault()
+  })
 
   // Open DevTools in production for debugging (Temporary)
   // win.webContents.openDevTools()

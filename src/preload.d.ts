@@ -1,16 +1,17 @@
 export {}
 
 declare global {
+  type AllowedStoreKey = 'menuItems' | 'historyEntries' | 'settings'
+
   interface Window {
     openspecBridge: {
       ping: () => Promise<string>
       store: {
-        get: (key: string) => Promise<any>
-        set: (key: string, value: any) => Promise<void>
-        delete: (key: string) => Promise<void>
+        get: (key: AllowedStoreKey) => Promise<any>
+        set: (key: AllowedStoreKey, value: any) => Promise<void>
+        delete: (key: AllowedStoreKey) => Promise<void>
         clear: () => Promise<void>
       }
     }
   }
 }
-

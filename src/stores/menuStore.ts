@@ -32,6 +32,17 @@ export const useMenuStore = defineStore('menu', {
     async removeItem(id: string) {
       this.items = this.items.filter(i => i.id !== id)
       await this.saveItems()
+    },
+    async updateItem(id: string, patch: { name?: string; tags?: string[] }) {
+      const idx = this.items.findIndex(i => i.id === id)
+      if (idx === -1) return
+
+      const prev = this.items[idx]
+      const next: MenuItem = { ...prev }
+      if (patch.name !== undefined) next.name = patch.name
+      if (patch.tags !== undefined) next.tags = patch.tags.length > 0 ? patch.tags : undefined
+      this.items[idx] = next
+      await this.saveItems()
     }
   }
 })

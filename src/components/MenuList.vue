@@ -1,14 +1,43 @@
 <script setup lang="ts">
 import { useMenuStore, type MenuItem } from '../stores/menuStore'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 
 const menuStore = useMenuStore()
 const fileInput = ref<HTMLInputElement | null>(null)
 
-// Add Item Form
 const isAdding = ref(false)
 const newItemName = ref('')
 const newItemTags = ref('')
+
+const searchQuery = ref('')
+
+const editingId = ref<string | null>(null)
+const editName = ref('')
+const editTags = ref('')
+
+const importMessage = ref('')
+
+const normalizeTags = (tags: string[]) => {
+  const uniq = new Set<string>()
+  tags.forEach(t => {
+    const v = t.trim()
+    if (v) uniq.add(v)
+  })
+  return Array.from(uniq)
+}
+
+const parseTags = (raw: string) => {
+  return normalizeTags(raw.split(/[,，\s]+/).map(t => t.trim()).filter(Boolean))
+}
+
+const filteredItems = computed(() => {
+  const q = searchQuery.value.trim().toLowerCase()
+  if (!q) return menuStore.items
+  return menuStore.items.filter(item => {
+    if (item.name.toLowerCase().includes(q)) return true
+    return (item.tags ?? []).some(t => t.toLowerCase().includes(q))
+  })
+})
 
 const handleFileUpload = (event: Event) => {
   const target = event.target as HTMLInputElement
@@ -18,21 +47,36 @@ const handleFileUpload = (event: Event) => {
     reader.onload = (e) => {
       try {
         const content = e.target?.result as string
-        const items = JSON.parse(content) as MenuItem[]
+        const items = JSON.parse(content) as unknown
         if (Array.isArray(items)) {
-          // Simple validation: check if items have name
-          const validItems = items.filter(i => i.name)
-          // Assign IDs if missing
-          validItems.forEach(i => {
-             if (!i.id) i.id = i.name + '-' + Math.random().toString(36).substr(2, 9)
-          })
-          menuStore.importItems(validItems)
-          alert(`成功导入 ${validItems.length} 个菜单项`)
+          const seenNames = new Set<string>()
+          const normalized: MenuItem[] = []
+
+          for (const raw of items) {
+            if (!raw || typeof raw !== 'object') continue
+            const maybe = raw as any
+            const name = typeof maybe.name === 'string' ? maybe.name.trim() : ''
+            if (!name) continue
+
+            const nameKey = name.toLowerCase()
+            if (seenNames.has(nameKey)) continue
+            seenNames.add(nameKey)
+
+            const tags = Array.isArray(maybe.tags) ? normalizeTags(maybe.tags.map((t: any) => String(t))) : []
+            normalized.push({
+              id: typeof maybe.id === 'string' && maybe.id.trim() ? maybe.id : crypto.randomUUID(),
+              name,
+              tags: tags.length > 0 ? tags : undefined
+            })
+          }
+
+          menuStore.importItems(normalized)
+          importMessage.value = `导入完成：${normalized.length} 项`
         } else {
-          alert('格式错误：必须是数组')
+          importMessage.value = '格式错误：必须是数组'
         }
       } catch (err) {
-        alert('解析失败：' + err)
+        importMessage.value = '解析失败：文件不是合法 JSON'
       }
     }
     reader.readAsText(file)
@@ -42,7 +86,7 @@ const handleFileUpload = (event: Event) => {
 const addItem = async () => {
   if (!newItemName.value.trim()) return
   
-  const tags = newItemTags.value.split(/[,，\s]+/).filter(t => t.trim())
+  const tags = parseTags(newItemTags.value)
   
   await menuStore.addItem({
     id: crypto.randomUUID(),
@@ -53,6 +97,26 @@ const addItem = async () => {
   newItemName.value = ''
   newItemTags.value = ''
   isAdding.value = false
+}
+
+const startEdit = (item: MenuItem) => {
+  editingId.value = item.id
+  editName.value = item.name
+  editTags.value = (item.tags ?? []).join(' ')
+}
+
+const cancelEdit = () => {
+  editingId.value = null
+  editName.value = ''
+  editTags.value = ''
+}
+
+const saveEdit = async (id: string) => {
+  const name = editName.value.trim()
+  if (!name) return
+  const tags = parseTags(editTags.value)
+  await menuStore.updateItem(id, { name, tags })
+  cancelEdit()
 }
 </script>
 
@@ -70,23 +134,38 @@ const addItem = async () => {
     </div>
 
     <div class="actions">
-       <span class="import-label">或导入JSON:</span>
-       <input type="file" ref="fileInput" accept=".json" @change="handleFileUpload" />
+      <input v-model="searchQuery" placeholder="搜索菜名/标签" class="input-search" />
+      <span class="import-label">导入 JSON:</span>
+      <input type="file" ref="fileInput" accept=".json" @change="handleFileUpload" />
     </div>
+
+    <div v-if="importMessage" class="import-message">{{ importMessage }}</div>
     
     <div v-if="menuStore.items.length === 0">
       <p>暂无菜单，请添加或导入。</p>
     </div>
     <ul v-else class="items-container">
       <TransitionGroup name="list">
-        <li v-for="item in menuStore.items" :key="item.id" class="menu-item">
-          <div class="item-info">
+        <li v-for="item in filteredItems" :key="item.id" class="menu-item">
+          <div class="item-info" v-if="editingId !== item.id">
             <span class="item-name">{{ item.name }}</span>
             <span v-if="item.tags" class="item-tags">
               <span v-for="tag in item.tags" :key="tag" class="tag">{{ tag }}</span>
             </span>
           </div>
-          <button @click="menuStore.removeItem(item.id)" class="del-btn">×</button>
+          <div class="edit-row" v-else>
+            <input v-model="editName" class="input-edit-name" @keyup.enter="saveEdit(item.id)" />
+            <input v-model="editTags" class="input-edit-tags" @keyup.enter="saveEdit(item.id)" />
+          </div>
+
+          <div class="item-actions" v-if="editingId !== item.id">
+            <button class="edit-btn" @click="startEdit(item)">编辑</button>
+            <button @click="menuStore.removeItem(item.id)" class="del-btn">×</button>
+          </div>
+          <div class="item-actions" v-else>
+            <button class="save-edit-btn" @click="saveEdit(item.id)" :disabled="!editName.trim()">保存</button>
+            <button class="cancel-edit-btn" @click="cancelEdit">取消</button>
+          </div>
         </li>
       </TransitionGroup>
     </ul>
@@ -174,6 +253,28 @@ const addItem = async () => {
   margin-bottom: 15px;
   font-size: 0.9rem;
   color: #64748b;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.input-search {
+  flex: 1;
+  min-width: 180px;
+  padding: 8px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  outline: none;
+}
+
+.input-search:focus {
+  border-color: #667eea;
+}
+
+.import-message {
+  margin-bottom: 12px;
+  font-size: 0.9rem;
 }
 
 .items-container {
@@ -194,6 +295,7 @@ const addItem = async () => {
   border-radius: 10px;
   transition: all 0.2s;
   border: 1px solid transparent;
+  gap: 12px;
 }
 
 .menu-item:hover {
@@ -210,6 +312,67 @@ const addItem = async () => {
 
 .item-tags {
   margin-left: 10px;
+}
+
+.item-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.edit-btn {
+  border: 1px solid #e2e8f0;
+  background: white;
+  color: #334155;
+  padding: 6px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.save-edit-btn {
+  border: none;
+  background: #42b883;
+  color: white;
+  padding: 6px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.cancel-edit-btn {
+  border: 1px solid #e2e8f0;
+  background: white;
+  color: #334155;
+  padding: 6px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.edit-row {
+  display: flex;
+  gap: 10px;
+  flex: 1;
+}
+
+.input-edit-name, .input-edit-tags {
+  padding: 8px 10px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  outline: none;
+}
+
+.input-edit-name {
+  flex: 1;
+  min-width: 140px;
+}
+
+.input-edit-tags {
+  flex: 1;
+  min-width: 140px;
+}
+
+.input-edit-name:focus, .input-edit-tags:focus {
+  border-color: #667eea;
 }
 
 .tag {
